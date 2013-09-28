@@ -8,13 +8,16 @@ import java.util.concurrent.Callable;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -26,6 +29,8 @@ import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,6 +38,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -42,6 +49,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -59,9 +67,14 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
+import com.openatk.tillage.FragmentSlider;
+import com.openatk.tillage.R;
+import com.openatk.tillage.FragmentAddField;
+import com.openatk.tillage.MainActivity.DropDownAnim;
 import com.openatk.libcommon.rock.Rock;
 import com.openatk.libtrello.TrelloController;
 import com.openatk.tillage.FragmentAddField.AddFieldListener;
+import com.openatk.tillage.FragmentSlider.SliderListener;
 import com.openatk.tillage.FragmentEditJobPopup.EditJobListener;
 import com.openatk.tillage.FragmentListView.ListViewListener;
 import com.openatk.tillage.db.DatabaseHelper;
@@ -79,7 +92,7 @@ import com.openatk.tillage.trello.SyncController.SyncControllerListener;
 public class MainActivity extends FragmentActivity implements OnClickListener,
 		OnMapClickListener, AddFieldListener, EditJobListener,
 		OnItemSelectedListener, ListViewListener, OnMarkerClickListener,
-		OnMarkerDragListener, MyPolygonListener, SyncControllerListener {
+		OnMarkerDragListener, MyPolygonListener, SyncControllerListener, SliderListener{
 	private GoogleMap map;
 	private UiSettings mapSettings;
 	
@@ -94,6 +107,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 	private Menu menu;
 	
 	private int mCurrentState = 0;
+	private int sliderIsShowing = 0;
 	private int editIsShowing = 0;
 	private int addIsShowing = 0;
 	private static final int STATE_DEFAULT = 0;
@@ -112,7 +126,10 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 	private ArrayAdapter<Operation> spinnerMenuAdapter = null;
 	private Spinner spinnerMenu = null;
 
+	//FragmentAddField fragmentAddField = null;
+	FragmentSlider fragmentSlider = null;
 	FragmentEditJobPopup fragmentEditField = null;
+	//FragmentSlider fragmentSlider = null;
 	FragmentListView fragmentListView = null;
 	FragmentAddField fragmentAddField = null;
 	String addingBoundary = "";
@@ -953,7 +970,190 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 		}
 		return null;
 	}
+	private Void showSlider(Boolean transition) {
+		if(addIsShowing == 1){
+			hideAdd(false);
+		}
+		if (sliderIsShowing == 0) {
+			sliderIsShowing = 1;
+			// Set height back to wrap, in case add buttons or something
+			FrameLayout layout = (FrameLayout) findViewById(R.id.fragment_container_slider);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layout
+					.getLayoutParams();
+			params.height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+			layout.setLayoutParams(params);
+			FragmentManager fm = getSupportFragmentManager();
+			FragmentSlider fragment = new FragmentSlider();
+			FragmentTransaction ft = fm.beginTransaction();
+			if (transition)
+				ft.setCustomAnimations(R.anim.slide_up, R.anim.slide_down);
+			ft.add(R.id.fragment_container_slider, fragment, "slider");
+			ft.commit();
+			fragmentSlider = fragment;
+			sliderPosition = 0;
+		}
+		this.invalidateOptionsMenu();
+		return null;
+	}
+	private void hideSlider(Boolean transition) {
+		if (sliderIsShowing == 1) {
+			sliderIsShowing = 0;
+			FragmentManager fm = getSupportFragmentManager();
+			FragmentSlider fragment = (FragmentSlider) fm.findFragmentByTag("slider");
+			// Set height so transition works TODO 3 different heights?? Get from fragment, fragment.getMyHeight?
+			FrameLayout layout = (FrameLayout) findViewById(R.id.fragment_container_slider);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layout
+					.getLayoutParams();
+			params.height = fragment.getHeight();
+			layout.setLayoutParams(params);
+			// Do transition
+			FragmentTransaction ft = fm.beginTransaction();
+			if (transition)
+				ft.setCustomAnimations(R.anim.slide_up, R.anim.slide_down);
+			ft.remove(fragment);
+			ft.commit();
+			fragmentSlider = null;
+		}
+		this.invalidateOptionsMenu();
+	}	
+	
+	private int sliderStartDrag = 0;
+	private int sliderHeightStart = 0;
+	@Override
+	public void SliderDragDown(int start) {
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		int height = size.y;
+		
+		if(fragmentSlider != null){
+			ScrollView sv = (ScrollView) fragmentSlider.getView().findViewById(R.id.slider_scrollView);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) sv.getLayoutParams();
+			sliderStartDrag = height - start - params.height;
+			sliderHeightStart = params.height;
+		}
+	}
 
+	@Override
+	public void SliderDragDragging(int whereY) {
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		int height = size.y;
+		
+		if(fragmentSlider != null){
+			ScrollView sv = (ScrollView) fragmentSlider.getView().findViewById(R.id.slider_scrollView);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) sv.getLayoutParams();
+			
+			if((height - whereY - sliderStartDrag) > 0){
+				params.height = height - whereY - sliderStartDrag;
+			} else {
+				params.height = 0;
+			}
+			sv.setLayoutParams(params);
+		}
+	}
+	
+	@Override
+	public void SliderDragUp(int whereY) {
+		//Slider done dragging snap to 1 of 3 positions
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		int oneThirdHeight = size.y / 3;
+		if(whereY < oneThirdHeight){
+			//Fullscreen
+			Log.d("SliderDragUp", "fullscreen");
+		} else if(whereY < oneThirdHeight * 2) {
+			//Middle
+			Log.d("SliderDragUp", "middle");
+
+		} else {
+			//Closed
+			Log.d("SliderDragUp", "closed");
+
+		}
+		//Find end height
+		if(fragmentSlider != null){
+			ScrollView sv = (ScrollView) fragmentSlider.getView().findViewById(R.id.slider_scrollView);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) sv.getLayoutParams();
+			if(params.height > sliderHeightStart){
+				//Make bigger
+				SliderGrow();
+			} else {
+				//Make smaller
+				SliderShrink();
+			}
+		}
+	}
+	
+	private int sliderPosition = 0;
+	private void SliderShrink(){
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		int oneThirdHeight = size.y / 3;
+		
+		if(fragmentSlider != null){
+			ScrollView sv = (ScrollView) fragmentSlider.getView().findViewById(R.id.slider_scrollView);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) sv.getLayoutParams();
+			if(sliderPosition == 1){
+				//Middle -> Small
+				DropDownAnim an = new DropDownAnim(sv, params.height, 0);
+				an.setDuration(300);
+				sv.startAnimation(an);
+				sliderPosition = 0;
+			} else if(sliderPosition == 2){
+				//Fullscreen -> Middle if has notes
+				//Fullscreen -> Small if no notes
+				/*if(fragmentSlider.hasNotes()){
+					DropDownAnim an = new DropDownAnim(sv, params.height, oneThirdHeight);
+					an.setDuration(300);
+					sv.startAnimation(an);
+					sliderPosition = 1;
+				} */
+				//else {
+					DropDownAnim an = new DropDownAnim(sv, params.height, 0);
+					an.setDuration(300);
+					sv.startAnimation(an);
+					sliderPosition = 0;
+				//}
+			}
+			sv.setLayoutParams(params);
+		}
+	}
+	private void SliderGrow(){
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		int oneThirdHeight = size.y / 3;
+		int actionBarHeight = 0;
+		TypedValue tv = new TypedValue();
+		if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
+		{
+		    actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+		}
+		if(fragmentSlider != null){
+			RelativeLayout relAdd = (RelativeLayout) fragmentSlider.getView().findViewById(R.id.slider_layMenu);
+			Log.d("layMenu:", Integer.toString(relAdd.getHeight()));
+			ScrollView sv = (ScrollView) fragmentSlider.getView().findViewById(R.id.slider_scrollView);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) sv.getLayoutParams();
+			if(sliderPosition == 0){
+				//Small -> Middle
+				DropDownAnim an = new DropDownAnim(sv, params.height, oneThirdHeight);
+				an.setDuration(300);
+				sv.startAnimation(an);
+				sliderPosition = 1;
+			} else if(sliderPosition == 1){
+				//Middle -> Fullscreen
+				DropDownAnim an = new DropDownAnim(sv, params.height, (size.y - relAdd.getHeight() - actionBarHeight));
+				an.setDuration(300);
+				sv.startAnimation(an);
+				sliderPosition = 2;
+			}
+			sv.setLayoutParams(params);
+		}
+	}
 	private void hideEdit(Boolean transition) {
 		if (editIsShowing == 1) {
 			editIsShowing = 0;
@@ -1728,4 +1928,36 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 		final AlertDialog alert = builder.create();
 		alert.show();
 	}
+
+	public class DropDownAnim extends Animation {
+	    int targetHeight;
+	    int startHeight;
+	    View view;
+	    boolean down;
+
+	    public DropDownAnim(View view, int startHeight, int targetHeight) {
+	        this.view = view;
+	        this.startHeight = startHeight;
+	        this.targetHeight = targetHeight;
+	    }
+
+	    @Override
+	    protected void applyTransformation(float interpolatedTime, Transformation t) {
+	        int newHeight = (int) (startHeight - ((startHeight - targetHeight) * interpolatedTime));
+	        view.getLayoutParams().height = newHeight;
+	        view.requestLayout();
+	    }
+
+	    @Override
+	    public void initialize(int width, int height, int parentWidth,
+	            int parentHeight) {
+	        super.initialize(width, height, parentWidth, parentHeight);
+	    }
+
+	    @Override
+	    public boolean willChangeBounds() {
+	        return true;
+	    }
+	}
+	
 }
