@@ -67,7 +67,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.openatk.tillage.FragmentSlider;
+//import com.openatk.tillage.FragmentSlider;
 import com.openatk.tillage.R;
 import com.openatk.tillage.FragmentAddField;
 import com.openatk.tillage.MainActivity.DropDownAnim;
@@ -92,7 +92,7 @@ import com.openatk.tillage.trello.SyncController.SyncControllerListener;
 public class MainActivity extends FragmentActivity implements OnClickListener,
 		OnMapClickListener, AddFieldListener, EditJobListener,
 		OnItemSelectedListener, ListViewListener, OnMarkerClickListener,
-		OnMarkerDragListener, MyPolygonListener, SyncControllerListener, SliderListener{
+		OnMarkerDragListener, MyPolygonListener, SyncControllerListener{
 	private GoogleMap map;
 	private UiSettings mapSettings;
 	
@@ -146,9 +146,11 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 		dbHelper = new DatabaseHelper(this);
 		
 		FragmentManager fm = getSupportFragmentManager();
-		SupportMapFragment f = (SupportMapFragment) fm
-				.findFragmentById(R.id.map);
-
+		SupportMapFragment f = (SupportMapFragment) fm.findFragmentById(R.id.map);
+		fragmentEditField = (FragmentEditJobPopup) fm.findFragmentByTag("slider");
+		if(fragmentEditField != null){
+			sliderIsShowing = 1;
+		}
 		if (savedInstanceState == null) {
 			// First incarnation of this activity.
 			f.setRetainInstance(true);
@@ -957,7 +959,6 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 					.getLayoutParams();
 			params.height = RelativeLayout.LayoutParams.WRAP_CONTENT;
 			layout.setLayoutParams(params);
-
 			FragmentManager fm = getSupportFragmentManager();
 			FragmentEditJobPopup fragment = new FragmentEditJobPopup();
 			FragmentTransaction ft = fm.beginTransaction();
@@ -965,12 +966,13 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 				ft.setCustomAnimations(R.anim.slide_up, R.anim.slide_down);
 			ft.add(R.id.fragment_container_edit_job, fragment, "edit_job");
 			ft.commit();
-
 			fragmentEditField = fragment;
+			sliderPosition = 0;
+			//fragmentEditField = fragment;
 		}
 		return null;
 	}
-	private Void showSlider(Boolean transition) {
+	/*private Void showSlider(Boolean transition) {
 		if(addIsShowing == 1){
 			hideAdd(false);
 		}
@@ -994,12 +996,12 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 		}
 		this.invalidateOptionsMenu();
 		return null;
-	}
-	private void hideSlider(Boolean transition) {
+	}*/
+	/*private void hideSlider(Boolean transition) {
 		if (sliderIsShowing == 1) {
 			sliderIsShowing = 0;
 			FragmentManager fm = getSupportFragmentManager();
-			FragmentSlider fragment = (FragmentSlider) fm.findFragmentByTag("slider");
+			FragmentEditJobPopup fragment = (FragmentEditJobPopup) fm.findFragmentByTag("slider");
 			// Set height so transition works TODO 3 different heights?? Get from fragment, fragment.getMyHeight?
 			FrameLayout layout = (FrameLayout) findViewById(R.id.fragment_container_slider);
 			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layout
@@ -1015,7 +1017,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 			fragmentSlider = null;
 		}
 		this.invalidateOptionsMenu();
-	}	
+	}	*/
 	
 	private int sliderStartDrag = 0;
 	private int sliderHeightStart = 0;
@@ -1026,8 +1028,8 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 		display.getSize(size);
 		int height = size.y;
 		
-		if(fragmentSlider != null){
-			ScrollView sv = (ScrollView) fragmentSlider.getView().findViewById(R.id.slider_scrollView);
+		if(fragmentEditField != null){
+			ScrollView sv = (ScrollView) fragmentEditField.getView().findViewById(R.id.slider_scrollView);
 			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) sv.getLayoutParams();
 			sliderStartDrag = height - start - params.height;
 			sliderHeightStart = params.height;
@@ -1154,6 +1156,7 @@ public class MainActivity extends FragmentActivity implements OnClickListener,
 			sv.setLayoutParams(params);
 		}
 	}
+	
 	private void hideEdit(Boolean transition) {
 		if (editIsShowing == 1) {
 			editIsShowing = 0;

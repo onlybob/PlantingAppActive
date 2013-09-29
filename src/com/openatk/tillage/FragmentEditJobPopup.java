@@ -32,8 +32,10 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -49,7 +51,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 public class FragmentEditJobPopup extends Fragment implements
-		OnCheckedChangeListener, OnClickListener, OnItemSelectedListener {
+		OnCheckedChangeListener, OnClickListener, OnItemSelectedListener, OnTouchListener {
 
 	EditJobListener listener;
 	private Field currentField = null;
@@ -92,12 +94,20 @@ public class FragmentEditJobPopup extends Fragment implements
 		public void EditJobDateSave(int year, int month, int day);
 
 		public void EditJobEditField();
+		public void SliderDragDown(int start);
+		public void SliderDragDragging(int whereY);
+		public void SliderDragUp(int whereY);
 	}
+	//public interface SliderListener {
+		//public void SliderDragDown(int start);
+		//public void SliderDragDragging(int whereY);
+		//public void SliderDragUp(int whereY);
+	//}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.fragment_edit_job_popup,
+		View view = inflater.inflate(R.layout.fragment_slider,
 				container, false);
 
 		dbHelper = new DatabaseHelper(this.getActivity());
@@ -643,9 +653,42 @@ public class FragmentEditJobPopup extends Fragment implements
 		}
 	}
 
+	/*@Override
+	  public void onNothingSelected(AdapterView<?> arg0) {
+		// TODO Auto-generated method stub
+
+	}*/
+
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		float eventY = event.getRawY();
+		
+		switch (event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+            {
+            	listener.SliderDragDown((int)eventY);
+               break; 
+            }
+            case MotionEvent.ACTION_UP:
+            {     
+            	listener.SliderDragUp((int)(eventY));
+                 break;
+            }
+            case MotionEvent.ACTION_MOVE:
+            {
+            	listener.SliderDragDragging((int)(eventY));
+                break;
+            }
+        }
+        return true;
+	}
+
 	@Override
 	public void onNothingSelected(AdapterView<?> arg0) {
 		// TODO Auto-generated method stub
-
+		
 	}
+
 }
+

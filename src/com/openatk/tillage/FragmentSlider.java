@@ -1,22 +1,22 @@
 package com.openatk.tillage;
 
-import java.util.Date;
-import java.util.List;
+//import java.util.Date;
+//import java.util.List;
 
-import com.google.android.gms.maps.GoogleMap;
+/*import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.openatk.tillage.db.DatabaseHelper;
 import com.openatk.tillage.db.Field;
-import com.openatk.tillage.drawing.MyPolygon;
+import com.openatk.tillage.drawing.MyPolygon;*/
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.ContentValues;
+/*import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabase;*/
 import android.os.Bundle;
-import android.provider.ContactsContract.CommonDataKinds.Note;
+//import android.provider.ContactsContract.CommonDataKinds.Note;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;

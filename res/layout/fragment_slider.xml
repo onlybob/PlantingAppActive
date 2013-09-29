@@ -1,17 +1,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:layout_alignParentBottom="true"
     android:background="#EEE"
     android:clickable="true" >
-
-    <ScrollView
-        android:id="@+id/slider_scrollView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_centerInParent="true"
-        android:background="#EEE" >
-    </ScrollView>
 
     <RelativeLayout
         android:id="@+id/slider_layMenu"
@@ -81,7 +73,7 @@
 	            android:layout_marginRight="10dp" >
 	
 	            <CheckBox
-	                android:id="@+id/CheckBox01"
+	                android:id="@+id/edit_field_chkPlanned"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
 	                android:layout_alignParentTop="true"
@@ -89,10 +81,10 @@
 	                android:button="@drawable/checkbox_planned" />
 	
 	            <TextView
-	                android:id="@+id/TextView01"
+	                android:id="@+id/edit_field_label_chkPlanned"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:layout_below="@+id/CheckBox01"
+	                android:layout_below="@+id/edit_field_chkPlanned"
 	                android:layout_centerInParent="true"
 	                android:text="Planned"
 	                android:textSize="14sp" />
@@ -106,7 +98,7 @@
 	            android:layout_toRightOf="@+id/edit_field_layStatusPlanned" >
 	
 	            <CheckBox
-	                android:id="@+id/CheckBox02"
+	                android:id="@+id/edit_field_chkStarted"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
 	                android:layout_alignParentTop="true"
@@ -117,7 +109,7 @@
 	                android:id="@+id/edit_field_label_chkStarted"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:layout_below="@+id/CheckBox02"
+	                android:layout_below="@+id/edit_field_chkStarted"
 	                android:layout_centerInParent="true"
 	                android:text="Started"
 	                android:textSize="14sp" />
@@ -131,7 +123,7 @@
 	            android:layout_toRightOf="@+id/edit_field_layStatusStarted" >
 	
 	            <CheckBox
-	                android:id="@+id/CheckBox03"
+	                android:id="@+id/edit_field_chkDone"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
 	                android:layout_alignParentTop="true"
@@ -142,7 +134,7 @@
 	                android:id="@+id/edit_field_label_chkDone"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:layout_below="@+id/CheckBox03"
+	                android:layout_below="@+id/edit_field_chkDone"
 	                android:layout_centerInParent="true"
 	                android:text="Done"
 	                android:textSize="14sp" />
@@ -241,4 +233,19 @@
 	            android:textSize="14sp" />
 	    </RelativeLayout>
 	</RelativeLayout>
+
+<ScrollView
+        android:id="@+id/slider_scrollView"
+	    android:layout_width="match_parent"
+	    android:layout_height="0dp"
+	    android:layout_below="@+id/slider_layMenu"
+	    android:background="#EEE">
+		<LinearLayout
+		    android:id="@+id/slider_listNotes"
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:layout_alignParentTop="true"
+		    android:orientation="vertical"/>   
+    </ScrollView>
+    
 </RelativeLayout>
